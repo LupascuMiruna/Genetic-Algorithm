@@ -22,13 +22,11 @@ lg = 0
 intermediate_population = []    #after the selection
 recombinated_population = []    #after the recombination
 mutated_population = []         #after mutation
-fittest_values = []     #from each generation we will choose the fittest value
-fittest = []    #fittest elem FROM ALLL GENERATIONS until now
 values_fittest = []     #fit of the fittest element
 fittest_from_current_generation = []
-best_fitness = 0
-is_elitist = 0 # 1 - the fittest elem is qualified for the next generation, 0 - is not
 
+is_elitist = 0 # 1 - the fittest elem is qualified for the next generation, 0 - is not
+type_mutation = 0 # 0 - rare muation, 1 - normal mutation
 ct = 0
 
 def read():
@@ -50,8 +48,9 @@ def read():
     steps = int(f.readline())
     f.close()
 
-    global is_elitist
-    is_elitist = int(input("Elitist selection: 1-yes 0-no\n"))
+    global is_elitist, type_mutation
+    is_elitist = int(input("Elitist selection: 0-no 1-yes\n"))
+    type_mutation = int(input("Type mutation: 0-rare mutation 1-normal mutation\n"))
 
 def calculate_lg():
     global lg
@@ -101,9 +100,9 @@ def selection():
     intervals = []
     maxim_fitness = 0
 
-    global fittest_from_current_generation, fittest_values
+    global fittest_from_current_generation
+    #global fittest_values
     fittest_from_current_generation = []
-    global fittest, best_fitness #fittest elem FROM ALLL GENERATIONS until now
     global values_fittest
 
     #calculate the fittest element from current generation
@@ -114,13 +113,7 @@ def selection():
             #fittest_from_current_generation = copy.deepcopy(population[i])
             fittest_from_current_generation = population[i].copy()
 
-    #see if it's bigger than the fittest until now
-    if maxim_fitness > best_fitness:
-        best_fitness = maxim_fitness
-        fittest = copy.deepcopy(fittest_from_current_generation)
-
-    fittest_values.append(fittest_from_current_generation)
-    values_fittest.append(calculate_fitness(fittest_from_current_generation))
+    values_fittest.append(calculate_fitness(fittest_from_current_generation)) # the vector with the fittest from all generation -->this will be ploted
 
     #calculate for each elem the probability to be selected current_fit/total_fit
     #generate the intervals
@@ -243,7 +236,7 @@ def crossing_over():
             g.write(f"{i + 1}. {recombinated_population[i]} x = {from_base_2_to_10(recombinated_population[i])}\n")
 
 #for each gene in each cromozom we will generate a random number and if it's <= p_mutation --> we will change it
-def mutation():
+def normal_mutation():
 
     global mutated_population
     mutated_population = []
@@ -272,6 +265,33 @@ def mutation():
         for i in range(len(mutated_population)):
             g.write(f"{i + 1}. {mutated_population[i]} x = {from_base_2_to_10(mutated_population[i])}\n")
 
+def rare_mutation():
+    global mutated_population
+    mutated_population = []
+    mutated = set()
+    for i in range(len(recombinated_population)):
+        value = random.random()
+        if value <= p_mutation:
+                j = random.randint(0, lg -1)
+                recombinated_population[i][j] = 1 - recombinated_population[i][j]
+                mutated.add(i + 1)
+        mutated_population.append(recombinated_population[i])
+
+    # if elitist the fittest element is qualified
+    if is_elitist:
+        mutated_population.append(fittest_from_current_generation)
+
+        if ct == 1:
+            g.write(f"BEING ELIIST WE WILL SELECT AND THE FITTEST ELEM\n")
+
+    if ct == 1:
+        g.write(f"It have been modified cromozoms: \n")
+        for cromozom in mutated:
+            g.write(str(cromozom) + "\n")
+
+        g.write("\nAfter mutation:\n")
+        for i in range(len(mutated_population)):
+            g.write(f"{i + 1}. {mutated_population[i]} x = {from_base_2_to_10(mutated_population[i])}\n")
 
 def binary_search(value, intervals):
     left = 0
@@ -309,11 +329,14 @@ if __name__ == '__main__':
     while ct <= steps:
         selection()
         crossing_over()
-        mutation()
+
+        if type_mutation == 0:
+           normal_mutation()
+        else:
+            rare_mutation()
 
         init_population()
         for individual in mutated_population:
             population.append(individual)
         ct += 1
-
     evolution()
