@@ -90,7 +90,6 @@ def calculate_fitness(individual):
     return value
 
 def selection():
-
     global  intermediate_population
     intermediate_population = []
     fitness = []
@@ -172,7 +171,7 @@ def crossing_over():
     # recombinate circular for the odd case
     while(len(for_recombination) > 0 and len(for_recombination) != 1):
         if(len(for_recombination) == 3):
-            index = random.randint(0, lg)#generate a random point breakage --> interchange until that point
+            index = random.randint(0, lg - 1)#generate a random point breakage --> interchange until that point
             indx1 = for_recombination[0]
             indx2 = for_recombination[1]
             indx3 = for_recombination[2]
@@ -203,13 +202,11 @@ def crossing_over():
             recombinated_population.append(elem3)
             for_recombination = []
         else:
-            index = random.randint(0, lg) #to be sure that we will interchange smth --> can start with 1
+            index = random.randint(0, lg - 1) #to be sure that we will interchange smth --> can start with 1
             #choose last 2 elements
-            #indx1 = for_recombination[len(for_recombination) - 1]
             indx1 = for_recombination.pop()
             elem1 = intermediate_population[indx1]
 
-            #indx2 = for_recombination[len(for_recombination) - 1]
             indx2 = for_recombination.pop()
             elem2 = intermediate_population[indx2]
 
@@ -237,7 +234,6 @@ def crossing_over():
 
 #for each gene in each cromozom we will generate a random number and if it's <= p_mutation --> we will change it
 def normal_mutation():
-
     global mutated_population
     mutated_population = []
     mutated = set()
@@ -247,6 +243,7 @@ def normal_mutation():
             if value <= p_mutation:
                 recombinated_population[i][j] = 1 - recombinated_population[i][j]
                 mutated.add(i + 1)
+
         mutated_population.append(recombinated_population[i])
 
     # if elitist the fittest element is qualified
@@ -331,9 +328,9 @@ if __name__ == '__main__':
         crossing_over()
 
         if type_mutation == 0:
-           normal_mutation()
+           rare_mutation()
         else:
-            rare_mutation()
+            normal_mutation()
 
         init_population()
         for individual in mutated_population:
